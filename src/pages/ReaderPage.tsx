@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import type * as pdfjsLib from 'pdfjs-dist';
 import { ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
 import type { Ebook } from '../types/ebook';
+import type { InteractiveElement } from '../types/interactive';
 import { ebookService } from '../services/ebookService';
 import {
   loadPdfDocument,
@@ -14,11 +15,17 @@ import {
   toggleBookmark,
   type BookmarkItem,
 } from '../services/pdfService';
+import {
+  generateAIInteractiveElements,
+  getSavedInteractiveElements,
+} from '../services/aiGeneratorService';
 import { ReaderToolbar } from '../components/reader/ReaderToolbar';
 import { FlipBook } from '../components/reader/FlipBook';
 import { ThumbnailSidebar } from '../components/reader/ThumbnailSidebar';
 import { TableOfContentsDrawer } from '../components/reader/TableOfContentsDrawer';
 import { SearchDrawer } from '../components/reader/SearchDrawer';
+import { InteractivePageHotspots } from '../components/reader/InteractivePageHotspots';
+import { InteractiveOverlayModal } from '../components/interactive/InteractiveOverlayModal';
 
 export const ReaderPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,6 +38,8 @@ export const ReaderPage: React.FC = () => {
 
   const [outline, setOutline] = useState<PdfOutlineItem[]>([]);
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
+  const [interactiveElements, setInteractiveElements] = useState<InteractiveElement[]>([]);
+  const [activeModalElement, setActiveModalElement] = useState<InteractiveElement | null>(null);
 
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingProgressText, setLoadingProgressText] = useState<string>('Fetching e-book details...');
@@ -43,7 +52,7 @@ export const ReaderPage: React.FC = () => {
   const [showSearch, setShowSearch] = useState<boolean>(false);
   const [spreadMode, setSpreadMode] = useState<'auto' | 'single' | 'double'>('auto');
 
-  // 1. Fetch Ebook details, load PDF, resume saved page, & extract outline
+  // 1. Fetch Ebook details, load PDF, resume saved page, extract outline & generate AI interactive elements
   useEffect(() => {
     if (!id) return;
     let isCancelled = false;
@@ -74,6 +83,18 @@ export const ReaderPage: React.FC = () => {
 
           // Load bookmarks
           setBookmarks(getBookmarks(book.slug || book.id));
+
+          // Load or AI-generate interactive quizzes/videos/games
+          const existingInteractive = getSavedInteractiveElements(book.slug || book.id);
+          if (existingInteractive.length > 0) {
+            setInteractiveElements(existingInteractive);
+          } else {
+            generateAIInteractiveElements(doc, book.title, book.slug || book.id)
+              .then((generated) => {
+                if (!isCancelled) setInteractiveElements(generated);
+              })
+              .catch(() => {});
+          }
 
           // Extract outline chapters asynchronously
           extractPdfOutline(doc).then((extractedOutline) => {
@@ -267,6 +288,13 @@ export const ReaderPage: React.FC = () => {
           />
         )}
 
+        {/* Floating AI Interactive Page Hotspots */}
+        <InteractivePageHotspots
+          currentPage={currentPage}
+          interactiveElements={interactiveElements}
+          onOpenElement={(el) => setActiveModalElement(el)}
+        />
+
         {/* Thumbnail Sidebar Drawer */}
         <ThumbnailSidebar
           pdfDoc={pdfDoc}
@@ -280,7 +308,7 @@ export const ReaderPage: React.FC = () => {
           }}
         />
 
-        {/* Table of Contents & Bookmarks Drawer */}
+        {/* Table of Contents & AI Activities Drawer */}
         <TableOfContentsDrawer
           isOpen={showToc}
           onClose={() => setShowToc(false)}
@@ -292,6 +320,8 @@ export const ReaderPage: React.FC = () => {
           }}
           bookmarks={bookmarks}
           onToggleBookmark={handleToggleBookmark}
+          interactiveElements={interactiveElements}
+          onOpenInteractiveElement={(el) => setActiveModalElement(el)}
         />
 
         {/* Full-Text Search Drawer */}
@@ -303,6 +333,14 @@ export const ReaderPage: React.FC = () => {
             setCurrentPage(pageNum);
             setShowSearch(false);
           }}
+        />
+
+        {/* Interactive Overlay Modal (Quiz, Video, Flashcards, QR) */}
+        <InteractiveOverlayModal
+          isOpen={!!activeModalElement}
+          onClose={() => setActiveModalElement(null)}
+          element={activeModalElement}
+          bookId={ebook.slug || ebook.id}
         />
       </div>
     </div>

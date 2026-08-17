@@ -361,6 +361,47 @@ export const UploadPage: React.FC = () => {
               )}
             </div>
 
+            {/* AI Interactive Suite Badge & Settings */}
+            <div className="rounded-2xl liquid-glass p-5 border border-violet-500/30 space-y-3 bg-violet-500/5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-600/20 text-violet-600 dark:text-[#a78bfa]">
+                    <Sparkles className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-[#f8fafc]">
+                      AI Interactive Learning Suite
+                    </h4>
+                    <p className="text-[11px] text-slate-500 dark:text-[#94a3b8]">
+                      AI automatically attaches interactive widgets to your document
+                    </p>
+                  </div>
+                </div>
+                <span className="liquid-pill text-[10px] py-0.5 px-2 font-mono-code text-emerald-500 font-bold">
+                  Enabled
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                <div className="p-2 rounded-xl liquid-glass text-center text-[10px] font-bold">
+                  <span className="text-violet-600 dark:text-[#a78bfa] block">🎯 Quizzes</span>
+                  <span className="text-slate-400 text-[9px]">MCQ Checks</span>
+                </div>
+                <div className="p-2 rounded-xl liquid-glass text-center text-[10px] font-bold">
+                  <span className="text-rose-500 block">▶️ Videos</span>
+                  <span className="text-slate-400 text-[9px]">YouTube Embeds</span>
+                </div>
+                <div className="p-2 rounded-xl liquid-glass text-center text-[10px] font-bold">
+                  <span className="text-amber-500 block">🎮 Flashcards</span>
+                  <span className="text-slate-400 text-[9px]">Recall Games</span>
+                </div>
+                <div className="p-2 rounded-xl liquid-glass text-center text-[10px] font-bold">
+                  <span className="text-emerald-500 block">📱 QR / Forms</span>
+                  <span className="text-slate-400 text-[9px]">Google Forms</span>
+                </div>
+              </div>
+            </div>
+
             {/* Upload Progress Bar */}
             {isUploading && (
               <div className="space-y-2 rounded-2xl liquid-glass p-4 border border-violet-500/30">
