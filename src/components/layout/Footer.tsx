@@ -60,6 +60,11 @@ export const Footer: React.FC = () => {
                   <span>Publish New E-Book</span>
                 </Link>
               </li>
+              <li>
+                <Link to="/about" className="hover:text-violet-600 dark:hover:text-[#a78bfa] transition-colors flex items-center gap-1.5">
+                  <span>About Platform</span>
+                </Link>
+              </li>
             </ul>
           </div>
 

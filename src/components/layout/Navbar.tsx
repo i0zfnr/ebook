@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Library, UploadCloud, Home, Menu, X, Sparkles } from 'lucide-react';
+import { Library, UploadCloud, Home, Info, Menu, X, Sparkles } from 'lucide-react';
 import { ThemeToggle } from '../common/ThemeToggle';
 import { BrandLogo } from '../common/BrandLogo';
 
@@ -11,7 +11,8 @@ export const Navbar: React.FC = () => {
   const navLinks = [
     { name: 'Home', path: '/', icon: Home },
     { name: 'Library', path: '/library', icon: Library },
-    { name: 'Upload E-Book', path: '/upload', icon: UploadCloud },
+    { name: 'Upload', path: '/upload', icon: UploadCloud },
+    { name: 'About', path: '/about', icon: Info },
   ];
 
   const isActive = (path: string) => {
@@ -36,7 +37,7 @@ export const Navbar: React.FC = () => {
               </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-[#94a3b8] font-medium hidden sm:block">
-              Hafizul Irfan • Digital Publishing
+              Hafizul Irfan • Politeknik Besut
             </p>
           </div>
         </Link>
@@ -50,7 +51,7 @@ export const Navbar: React.FC = () => {
               <Link
                 key={link.path}
                 to={link.path}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 ${
                   active
                     ? 'bg-white text-violet-700 shadow-md shadow-violet-500/10 dark:bg-violet-600/30 dark:text-white dark:border dark:border-violet-400/30'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/50 dark:text-[#94a3b8] dark:hover:text-white dark:hover:bg-white/5'
