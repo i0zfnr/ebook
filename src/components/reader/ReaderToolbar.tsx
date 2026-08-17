@@ -10,11 +10,15 @@ import {
   ZoomOut,
   RotateCcw,
   LayoutGrid,
-  BookOpen,
   FileText,
   Columns2,
+  List,
+  Search,
+  Bookmark,
+  BookmarkCheck,
 } from 'lucide-react';
 import { ThemeToggle } from '../common/ThemeToggle';
+import { BrandLogo } from '../common/BrandLogo';
 
 interface ReaderToolbarProps {
   title: string;
@@ -31,6 +35,12 @@ interface ReaderToolbarProps {
   isFullscreen: boolean;
   onToggleThumbnails: () => void;
   showThumbnails: boolean;
+  onToggleToc?: () => void;
+  showToc?: boolean;
+  onToggleSearch?: () => void;
+  showSearch?: boolean;
+  isBookmarked?: boolean;
+  onToggleBookmark?: () => void;
   spreadMode?: 'auto' | 'single' | 'double';
   onToggleSpreadMode?: () => void;
   bookIdOrSlug?: string | number;
@@ -51,6 +61,12 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   isFullscreen,
   onToggleThumbnails,
   showThumbnails,
+  onToggleToc,
+  showToc = false,
+  onToggleSearch,
+  showSearch = false,
+  isBookmarked = false,
+  onToggleBookmark,
   spreadMode = 'auto',
   onToggleSpreadMode,
   bookIdOrSlug,
@@ -74,32 +90,32 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   const zoomPercentage = Math.round(zoom * 100);
 
   return (
-    <div className="z-30 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-950/90 px-4 py-2.5 backdrop-blur-md text-slate-700 dark:text-slate-300 select-none transition-colors duration-200">
+    <div className="z-30 flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 liquid-nav text-slate-700 dark:text-[#94a3b8] select-none transition-colors duration-200 font-sans">
       {/* Left: Back Navigation & Title */}
       <div className="flex items-center gap-3 min-w-0">
         <Link
           to={bookIdOrSlug ? `/book/${bookIdOrSlug}` : '/library'}
-          className="flex items-center gap-1.5 rounded-lg bg-slate-100 border border-slate-200 dark:bg-slate-900 dark:border-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white transition-colors"
+          className="liquid-btn-secondary flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono-code font-bold shadow-sm"
           title="Back"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Back</span>
         </Link>
 
         <div className="flex items-center gap-2 truncate">
-          <BookOpen className="h-4 w-4 text-blue-600 dark:text-blue-500 shrink-0 hidden sm:block" />
-          <h1 className="truncate text-sm font-semibold text-slate-900 dark:text-white" title={title}>
+          <BrandLogo size="sm" className="hidden sm:flex" />
+          <h1 className="truncate text-sm font-bold text-slate-900 dark:text-[#f8fafc]" title={title}>
             {title}
           </h1>
         </div>
       </div>
 
       {/* Center: Page Controls */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 font-mono-code">
         <button
           onClick={onPrevPage}
           disabled={currentPage <= 1}
-          className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
+          className="liquid-glass flex h-8 w-8 items-center justify-center rounded-xl text-slate-700 dark:text-[#f8fafc] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
           title="Previous Page (Left Arrow)"
           aria-label="Previous Page"
         >
@@ -113,17 +129,17 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
             value={inputPage}
             onChange={(e) => setInputPage(e.target.value)}
             onBlur={handleInputSubmit}
-            className="h-8 w-12 rounded-lg border border-slate-300 bg-white dark:border-slate-800 dark:bg-slate-900 px-1 text-center text-xs font-semibold text-slate-900 dark:text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="liquid-input h-8 w-12 text-center text-xs font-bold text-slate-900 dark:text-[#f8fafc]"
             aria-label="Page number"
           />
           <span className="text-slate-400 dark:text-slate-500 font-normal">/</span>
-          <span className="text-slate-600 dark:text-slate-400 font-semibold">{totalPages || '--'}</span>
+          <span className="text-slate-600 dark:text-[#94a3b8] font-bold">{totalPages || '--'}</span>
         </form>
 
         <button
           onClick={onNextPage}
           disabled={currentPage >= totalPages}
-          className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
+          className="liquid-glass flex h-8 w-8 items-center justify-center rounded-xl text-slate-700 dark:text-[#f8fafc] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
           title="Next Page (Right Arrow)"
           aria-label="Next Page"
         >
@@ -131,28 +147,74 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
         </button>
       </div>
 
-      {/* Right: Zoom Tools, Theme, & Fullscreen */}
+      {/* Right: Tools & Drawers */}
       <div className="flex items-center gap-1.5">
-        {/* Spread Mode Toggle (Single Page vs Double Page Spread) */}
+        {/* Table of Contents & Bookmarks Drawer Toggle */}
+        {onToggleToc && (
+          <button
+            onClick={onToggleToc}
+            className={`flex h-8 items-center gap-1.5 px-2.5 rounded-xl transition-all cursor-pointer ${
+              showToc
+                ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30 font-bold'
+                : 'liquid-glass text-slate-700 hover:text-violet-600 dark:text-[#94a3b8] dark:hover:text-white'
+            }`}
+            title="Table of Contents & Bookmarks"
+          >
+            <List className="h-4 w-4" />
+            <span className="hidden md:inline text-xs font-mono-code">Index</span>
+          </button>
+        )}
+
+        {/* Full-Text Search Drawer Toggle */}
+        {onToggleSearch && (
+          <button
+            onClick={onToggleSearch}
+            className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all cursor-pointer ${
+              showSearch
+                ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30'
+                : 'liquid-glass text-slate-700 hover:text-violet-600 dark:text-[#94a3b8] dark:hover:text-white'
+            }`}
+            title="Search inside book"
+          >
+            <Search className="h-4 w-4" />
+          </button>
+        )}
+
+        {/* Quick Bookmark Toggle */}
+        {onToggleBookmark && (
+          <button
+            onClick={onToggleBookmark}
+            className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all cursor-pointer ${
+              isBookmarked
+                ? 'bg-amber-500/20 text-amber-500 border border-amber-500/40 shadow-sm'
+                : 'liquid-glass text-slate-700 hover:text-violet-600 dark:text-[#94a3b8] dark:hover:text-white'
+            }`}
+            title={isBookmarked ? 'Remove bookmark' : 'Bookmark this page'}
+          >
+            {isBookmarked ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
+          </button>
+        )}
+
+        {/* Spread Mode Toggle */}
         {onToggleSpreadMode && (
           <button
             onClick={onToggleSpreadMode}
-            className="hidden md:flex items-center gap-1.5 rounded-lg bg-slate-100 border border-slate-200 dark:bg-slate-900 dark:border-slate-800 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white transition-colors"
+            className="liquid-glass hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono-code font-bold text-slate-700 dark:text-[#94a3b8] hover:text-violet-600 dark:hover:text-white transition-colors cursor-pointer"
             title={`View: ${spreadMode === 'single' ? 'Single Page' : spreadMode === 'double' ? 'Two-Page Spread' : 'Auto'}`}
           >
             {spreadMode === 'single' ? (
               <>
-                <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                <FileText className="h-3.5 w-3.5 text-violet-600 dark:text-[#a78bfa]" />
                 <span>Single</span>
               </>
             ) : spreadMode === 'double' ? (
               <>
-                <Columns2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                <Columns2 className="h-3.5 w-3.5 text-violet-600 dark:text-[#a78bfa]" />
                 <span>2-Page</span>
               </>
             ) : (
               <>
-                <Columns2 className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                <Columns2 className="h-3.5 w-3.5 text-slate-500 dark:text-[#94a3b8]" />
                 <span>Auto</span>
               </>
             )}
@@ -160,12 +222,12 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
         )}
 
         {/* Zoom Controls */}
-        <div className="flex items-center rounded-lg border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-900 p-0.5">
+        <div className="liquid-glass flex items-center rounded-xl p-0.5 font-mono-code">
           {onZoomOut && (
             <button
               onClick={onZoomOut}
               disabled={zoom <= 0.6}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-slate-700 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white disabled:opacity-30 transition-colors"
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-700 hover:bg-white/40 dark:text-[#94a3b8] dark:hover:bg-white/10 dark:hover:text-white disabled:opacity-30 transition-colors cursor-pointer"
               title="Zoom Out"
               aria-label="Zoom Out"
             >
@@ -176,7 +238,7 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
           {onResetZoom && (
             <button
               onClick={onResetZoom}
-              className="px-2 text-[11px] font-semibold text-slate-800 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors"
+              className="px-2 text-[11px] font-bold text-slate-800 hover:text-violet-600 dark:text-[#94a3b8] dark:hover:text-[#a78bfa] transition-colors cursor-pointer"
               title="Reset Zoom (100%)"
             >
               {zoomPercentage}%
@@ -187,7 +249,7 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
             <button
               onClick={onZoomIn}
               disabled={zoom >= 3.5}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-slate-700 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white disabled:opacity-30 transition-colors"
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-700 hover:bg-white/40 dark:text-[#94a3b8] dark:hover:bg-white/10 dark:hover:text-white disabled:opacity-30 transition-colors cursor-pointer"
               title="Zoom In (up to 350%)"
               aria-label="Zoom In"
             >
@@ -199,7 +261,7 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
         {onResetZoom && zoom !== 1 && (
           <button
             onClick={onResetZoom}
-            className="hidden sm:flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 border border-slate-200 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors"
+            className="liquid-glass hidden sm:flex h-8 w-8 items-center justify-center rounded-xl text-slate-600 hover:text-violet-600 dark:text-[#94a3b8] dark:hover:text-white transition-colors cursor-pointer"
             title="Reset Zoom"
             aria-label="Reset Zoom"
           >
@@ -209,10 +271,10 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
 
         <button
           onClick={onToggleThumbnails}
-          className={`flex h-8 w-8 items-center justify-center rounded-lg border transition-colors ${
+          className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all cursor-pointer ${
             showThumbnails
-              ? 'bg-blue-600/10 border-blue-500/30 text-blue-600 dark:bg-blue-600/20 dark:border-blue-500/40 dark:text-blue-400'
-              : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+              ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30'
+              : 'liquid-glass text-slate-700 hover:text-violet-600 dark:text-[#94a3b8] dark:hover:text-white'
           }`}
           title="Toggle Page Thumbnails"
           aria-label="Toggle Page Thumbnails"
@@ -220,12 +282,12 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
           <LayoutGrid className="h-4 w-4" />
         </button>
 
-        {/* Theme Toggle in Reader */}
+        {/* Theme Toggle */}
         <ThemeToggle />
 
         <button
           onClick={onToggleFullscreen}
-          className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white transition-colors"
+          className="liquid-glass flex h-8 w-8 items-center justify-center rounded-xl text-slate-700 hover:text-violet-600 dark:text-[#94a3b8] dark:hover:text-white transition-colors cursor-pointer"
           title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
           aria-label="Toggle Fullscreen"
         >

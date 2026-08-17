@@ -4,33 +4,23 @@ import { useTheme } from '../../context/ThemeContext';
 
 interface ThemeToggleProps {
   className?: string;
-  showLabel?: boolean;
 }
 
-export const ThemeToggle: React.FC<ThemeToggleProps> = ({ className = '', showLabel = false }) => {
+export const ThemeToggle: React.FC<ThemeToggleProps> = ({ className = '' }) => {
   const { theme, toggleTheme } = useTheme();
 
   return (
     <button
+      className={`liquid-glass group relative flex h-9 w-9 items-center justify-center rounded-xl text-slate-700 dark:text-[#f8fafc] hover:text-violet-600 dark:hover:text-[#a78bfa] hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer ${className}`}
       type="button"
       onClick={toggleTheme}
-      className={`relative flex items-center justify-center gap-2 rounded-xl border p-2 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 ${
-        theme === 'dark'
-          ? 'border-slate-800 bg-slate-900 text-amber-400 hover:border-slate-700 hover:bg-slate-800'
-          : 'border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900'
-      } ${className}`}
-      title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
-      aria-label="Toggle Theme"
+      aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+      title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
     >
-      {theme === 'dark' ? (
-        <Sun className="h-4 w-4 transition-transform duration-300 hover:rotate-45" />
+      {theme === 'light' ? (
+        <Moon className="h-4 w-4 transition-transform duration-300 group-hover:-rotate-12 group-hover:scale-110" />
       ) : (
-        <Moon className="h-4 w-4 transition-transform duration-300 hover:-rotate-12" />
-      )}
-      {showLabel && (
-        <span className="text-xs font-semibold">
-          {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-        </span>
+        <Sun className="h-4 w-4 transition-transform duration-300 group-hover:rotate-45 group-hover:scale-110 text-amber-400" />
       )}
     </button>
   );

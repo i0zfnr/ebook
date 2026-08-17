@@ -11,17 +11,18 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+function getInitialTheme(): Theme {
+  const saved = localStorage.getItem('portfolio-theme') || localStorage.getItem('ebook_theme');
+  if (saved === 'light' || saved === 'dark') return saved;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'dark';
+}
+
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    const saved = localStorage.getItem('ebook_theme') as Theme | null;
-    if (saved === 'light' || saved === 'dark') {
-      return saved;
-    }
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'dark'; // default to dark
-  });
+  const [theme, setThemeState] = useState<Theme>(getInitialTheme);
 
   useEffect(() => {
     const root = document.documentElement;
+    root.dataset.theme = theme;
     if (theme === 'dark') {
       root.classList.add('dark');
       root.classList.remove('light');
@@ -29,6 +30,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       root.classList.remove('dark');
       root.classList.add('light');
     }
+    localStorage.setItem('portfolio-theme', theme);
     localStorage.setItem('ebook_theme', theme);
   }, [theme]);
 

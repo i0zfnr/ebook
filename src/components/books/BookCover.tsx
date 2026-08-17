@@ -34,7 +34,7 @@ export const BookCover: React.FC<BookCoverProps> = ({
 
     if (pdfUrl && !coverUrl) {
       setLoading(true);
-      extractFirstPageThumbnail(pdfUrl, 360)
+      extractFirstPageThumbnail(pdfUrl, 380)
         .then((thumb) => {
           if (isMounted) {
             setRenderedCover(thumb);
@@ -56,7 +56,7 @@ export const BookCover: React.FC<BookCoverProps> = ({
 
   return (
     <div
-      className={`relative w-full ${aspectRatio} overflow-hidden rounded-lg bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 shadow-md border border-slate-700/50 group-hover:shadow-xl group-hover:shadow-blue-900/20 transition-all duration-300 ${className}`}
+      className={`relative w-full ${aspectRatio} overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 shadow-md border border-slate-700/50 group-hover:shadow-2xl transition-all duration-300 ${className}`}
     >
       {/* 3D Book Spine Effect on Left Edge */}
       <div className="absolute inset-y-0 left-0 w-3 bg-gradient-to-r from-black/40 via-white/10 to-transparent z-10 pointer-events-none" />
@@ -64,9 +64,9 @@ export const BookCover: React.FC<BookCoverProps> = ({
 
       {/* Book Cover Content */}
       {loading ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-slate-400 gap-2 p-4 text-center">
-          <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
-          <span className="text-xs font-medium text-slate-400">Rendering cover...</span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 text-slate-400 gap-2 p-4 text-center">
+          <Loader2 className="h-5 w-5 animate-spin text-violet-500" />
+          <span className="text-[11px] font-mono-code text-slate-400">Loading cover...</span>
         </div>
       ) : renderedCover && !error ? (
         <img
@@ -77,12 +77,12 @@ export const BookCover: React.FC<BookCoverProps> = ({
         />
       ) : (
         /* Fallback Artistic Book Graphic */
-        <div className="flex h-full w-full flex-col justify-between p-5 text-white bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-950">
+        <div className="flex h-full w-full flex-col justify-between p-5 text-white bg-gradient-to-br from-violet-900 via-indigo-950 to-slate-950">
           <div className="space-y-1">
-            <div className="inline-flex rounded bg-blue-500/20 px-2 py-0.5 text-[10px] font-semibold text-blue-300 uppercase tracking-wider">
+            <div className="inline-flex rounded-full bg-violet-500/20 px-2.5 py-0.5 text-[10px] font-mono-code font-bold text-violet-300 uppercase tracking-wider">
               E-Book
             </div>
-            <h4 className="line-clamp-3 text-base font-bold text-white leading-snug drop-shadow">
+            <h4 className="line-clamp-3 text-base font-extrabold text-white leading-snug drop-shadow">
               {title}
             </h4>
           </div>
@@ -91,7 +91,7 @@ export const BookCover: React.FC<BookCoverProps> = ({
             <p className="line-clamp-1 text-xs text-slate-300 font-medium">
               {author || 'Unknown Author'}
             </p>
-            <BookIcon className="h-4 w-4 text-blue-400 opacity-60" />
+            <BookIcon className="h-4 w-4 text-violet-400 opacity-60" />
           </div>
         </div>
       )}

@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   Loader2,
   ExternalLink,
+  Sparkles,
 } from 'lucide-react';
 import type { Ebook } from '../types/ebook';
 import { ebookService, formatBytes, formatDate } from '../services/ebookService';
@@ -59,26 +60,26 @@ export const BookDetailsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-[70vh] items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 gap-3">
-        <Loader2 className="h-7 w-7 animate-spin text-blue-500" />
-        <span className="text-sm font-medium">Loading book details...</span>
+      <div className="flex min-h-[70vh] items-center justify-center text-slate-500 dark:text-[#94a3b8] gap-3">
+        <Loader2 className="h-7 w-7 animate-spin text-violet-600 dark:text-[#a78bfa]" />
+        <span className="text-sm font-mono-code">Loading book metadata...</span>
       </div>
     );
   }
 
   if (error || !ebook) {
     return (
-      <div className="flex min-h-[70vh] flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-6 text-center">
+      <div className="flex min-h-[70vh] flex-col items-center justify-center text-slate-900 dark:text-[#f8fafc] p-6 text-center">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/10 text-red-500 dark:text-red-400 mb-4 border border-red-500/20">
           <AlertTriangle className="h-7 w-7" />
         </div>
         <h2 className="text-xl font-bold">E-Book Not Found</h2>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400 max-w-md">
+        <p className="mt-1 text-sm text-slate-500 dark:text-[#94a3b8] max-w-md">
           {error || "The requested book could not be found or has been removed."}
         </p>
         <Link
           to="/library"
-          className="mt-6 flex items-center gap-2 rounded-xl bg-slate-900 text-white dark:bg-slate-800 px-5 py-2.5 text-sm font-semibold hover:bg-slate-800 dark:hover:bg-slate-700"
+          className="liquid-btn-primary mt-6 flex items-center gap-2 px-5 py-2.5 text-xs font-bold"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Library
@@ -88,21 +89,21 @@ export const BookDetailsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 py-12 transition-colors duration-200">
+    <div className="min-h-screen text-slate-900 dark:text-[#f8fafc] py-12 transition-colors duration-300">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         {/* Navigation Breadcrumb */}
         <div className="mb-8">
           <Link
             to="/library"
-            className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
+            className="inline-flex items-center gap-2 text-xs font-mono-code font-bold text-slate-500 hover:text-violet-600 dark:text-[#94a3b8] dark:hover:text-[#a78bfa] transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Library
+            <span>← Back to Library</span>
           </Link>
         </div>
 
-        {/* Book Container Card */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/50 p-6 sm:p-10 shadow-xl dark:shadow-2xl">
+        {/* Book Container Card with Liquid Glass */}
+        <div className="liquid-glass grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 rounded-3xl p-6 sm:p-10 shadow-2xl">
           {/* Left Column: Book Cover */}
           <div className="md:col-span-5 lg:col-span-4 flex flex-col items-center">
             <div className="w-full max-w-[280px]">
@@ -116,7 +117,7 @@ export const BookDetailsPage: React.FC = () => {
 
             <Link
               to={`/read/${ebook.slug || ebook.id}`}
-              className="mt-6 flex w-full max-w-[280px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3.5 px-6 text-sm font-bold text-white shadow-lg shadow-blue-600/30 hover:from-blue-500 hover:to-indigo-500 transition-all active:scale-95"
+              className="liquid-btn-primary mt-6 flex w-full max-w-[280px] items-center justify-center gap-2 py-3.5 px-6 text-sm font-extrabold shadow-xl"
             >
               <BookOpen className="h-4 w-4" />
               Read Interactive Flipbook
@@ -127,101 +128,102 @@ export const BookDetailsPage: React.FC = () => {
           <div className="md:col-span-7 lg:col-span-8 flex flex-col justify-between">
             <div className="space-y-6">
               <div>
-                <div className="inline-flex rounded bg-blue-500/10 px-2.5 py-0.5 text-xs font-semibold text-blue-600 dark:text-blue-400 border border-blue-500/20 mb-2">
-                  PDF E-Book
+                <div className="inline-flex items-center gap-1.5 liquid-pill text-xs py-0.5 px-3 mb-3">
+                  <Sparkles className="h-3.5 w-3.5 text-violet-600 dark:text-[#a78bfa]" />
+                  <span>PDF Interactive E-Book</span>
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#f8fafc] tracking-tight">
                   {ebook.title}
                 </h1>
-                <p className="mt-1 text-base text-slate-500 dark:text-slate-400 font-medium">
+                <p className="mt-1 text-base text-slate-500 dark:text-[#94a3b8] font-medium">
                   {ebook.author ? `By ${ebook.author}` : 'Unknown Author'}
                 </p>
               </div>
 
               {/* Description */}
               <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider font-mono-code text-slate-700 dark:text-[#f8fafc] mb-2">
                   Overview
                 </h3>
-                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line bg-slate-50 dark:bg-slate-950/40 rounded-xl p-4 border border-slate-200 dark:border-slate-800/60">
+                <p className="text-sm text-slate-600 dark:text-[#94a3b8] leading-relaxed whitespace-pre-line liquid-glass rounded-2xl p-4 shadow-inner">
                   {ebook.description || 'No description provided for this e-book.'}
                 </p>
               </div>
 
-              {/* Metadata Badges */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 p-3">
-                  <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+              {/* Metadata Badges with JetBrains Mono */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono-code">
+                <div className="liquid-glass flex items-center gap-2.5 rounded-2xl p-3.5 shadow-sm">
+                  <FileText className="h-4 w-4 text-violet-600 dark:text-[#a78bfa] shrink-0" />
                   <div>
-                    <p className="text-[10px] uppercase text-slate-500 font-medium">Pages</p>
-                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    <p className="text-[10px] uppercase text-slate-400">Pages</p>
+                    <p className="text-xs font-bold text-slate-900 dark:text-[#f8fafc]">
                       {ebook.total_pages ? `${ebook.total_pages} Pages` : 'Multi-Page'}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 p-3">
-                  <HardDrive className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                <div className="liquid-glass flex items-center gap-2.5 rounded-2xl p-3.5 shadow-sm">
+                  <HardDrive className="h-4 w-4 text-violet-600 dark:text-[#a78bfa] shrink-0" />
                   <div>
-                    <p className="text-[10px] uppercase text-slate-500 font-medium">Size</p>
-                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{formatBytes(ebook.file_size)}</p>
+                    <p className="text-[10px] uppercase text-slate-400">Size</p>
+                    <p className="text-xs font-bold text-slate-900 dark:text-[#f8fafc]">{formatBytes(ebook.file_size)}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/80 p-3 col-span-2 sm:col-span-1">
-                  <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                <div className="liquid-glass flex items-center gap-2.5 rounded-2xl p-3.5 shadow-sm col-span-2 sm:col-span-1">
+                  <Calendar className="h-4 w-4 text-violet-600 dark:text-[#a78bfa] shrink-0" />
                   <div>
-                    <p className="text-[10px] uppercase text-slate-500 font-medium">Uploaded</p>
-                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{formatDate(ebook.created_at)}</p>
+                    <p className="text-[10px] uppercase text-slate-400">Uploaded</p>
+                    <p className="text-xs font-bold text-slate-900 dark:text-[#f8fafc]">{formatDate(ebook.created_at)}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Bottom Actions */}
-            <div className="mt-8 flex items-center justify-between pt-6 border-t border-slate-100 dark:border-slate-800/80">
+            <div className="mt-8 flex items-center justify-between pt-6 border-t border-slate-200/50 dark:border-white/10">
               <a
                 href={ebook.pdf_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 transition-colors"
+                className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-violet-600 dark:text-[#94a3b8] dark:hover:text-[#a78bfa] transition-colors"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
-                Download / Direct PDF
+                <span>Download / Direct PDF</span>
               </a>
 
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(true)}
-                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300 transition-colors"
+                className="flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold text-red-600 hover:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 dark:hover:text-red-300 transition-colors"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                Delete E-Book
+                <span>Delete E-Book</span>
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal with Liquid Glass */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-md p-4">
+          <div className="liquid-glass w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl">
             <div className="flex items-center gap-3 text-red-500 dark:text-red-400 mb-3">
               <AlertTriangle className="h-6 w-6" />
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Delete E-Book</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-[#f8fafc]">Delete E-Book</h3>
             </div>
-            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              Are you sure you want to permanently delete <strong className="text-slate-800 dark:text-slate-200">"{ebook.title}"</strong>?
+            <p className="text-sm text-slate-600 dark:text-[#94a3b8] leading-relaxed">
+              Are you sure you want to permanently delete <strong className="text-slate-900 dark:text-[#f8fafc]">"{ebook.title}"</strong>?
               This will remove both the database record and its PDF files from storage.
             </p>
 
-            <div className="mt-6 flex items-center justify-end gap-3">
+            <div className="mt-6 flex items-center justify-end gap-3 font-mono-code text-xs">
               <button
                 type="button"
                 disabled={deleting}
                 onClick={() => setShowDeleteModal(false)}
-                className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                className="liquid-btn-secondary px-4 py-2 font-semibold"
               >
                 Cancel
               </button>
@@ -229,7 +231,7 @@ export const BookDetailsPage: React.FC = () => {
                 type="button"
                 disabled={deleting}
                 onClick={handleDelete}
-                className="flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-500 disabled:opacity-50"
+                className="flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 font-bold text-white hover:bg-red-500 disabled:opacity-50 transition-colors shadow-lg shadow-red-600/30"
               >
                 {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                 Confirm Delete

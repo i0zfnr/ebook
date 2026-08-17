@@ -130,7 +130,6 @@ export const UploadPage: React.FC = () => {
         setUploadProgress(progress);
       });
 
-      // Navigate to reader or book details page
       navigate(`/book/${result.slug || result.id}`);
     } catch (err: any) {
       if (err.response?.data?.errors) {
@@ -145,29 +144,29 @@ export const UploadPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 py-12 transition-colors duration-200">
+    <div className="min-h-screen text-slate-900 dark:text-[#f8fafc] py-12 transition-colors duration-300">
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-3.5 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400 mb-3">
-            <Sparkles className="h-3.5 w-3.5" />
-            Publishing Portal
+          <div className="inline-flex items-center gap-1.5 liquid-pill mb-3">
+            <Sparkles className="h-3.5 w-3.5 text-violet-600 dark:text-[#a78bfa]" />
+            <span>Publishing Portal</span>
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white sm:text-4xl tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-[#f8fafc] tracking-tight">
             Upload Your E-Book
           </h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+          <p className="mt-2 text-sm text-slate-600 dark:text-[#94a3b8]">
             Publish your PDF into an interactive, digital flipbook readable on any device.
           </p>
         </div>
 
-        {/* Form Box */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-10 shadow-xl dark:border-slate-800 dark:bg-slate-900/60 dark:shadow-2xl backdrop-blur-sm transition-colors">
+        {/* Liquid Glass Form Box */}
+        <div className="liquid-glass rounded-3xl p-6 sm:p-10 shadow-2xl">
           {errorMessage && (
-            <div className="mb-6 flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-50 dark:bg-red-950/30 p-4 text-sm text-red-600 dark:text-red-300">
+            <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-500/25 bg-red-50/80 dark:bg-red-950/40 p-4 text-sm text-red-600 dark:text-red-300">
               <AlertCircle className="h-5 w-5 text-red-500 dark:text-red-400 shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-red-700 dark:text-red-200">Upload Error</p>
+                <p className="font-bold text-red-700 dark:text-red-200">Upload Error</p>
                 <p className="mt-0.5 text-xs text-red-600/90 dark:text-red-300/90">{errorMessage}</p>
               </div>
             </div>
@@ -176,8 +175,8 @@ export const UploadPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* PDF Upload Dropzone */}
             <div>
-              <label className="block text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">
-                PDF Document <span className="text-blue-600 dark:text-blue-500">*</span>
+              <label className="block text-xs font-bold uppercase tracking-wider font-mono-code text-slate-700 dark:text-[#f8fafc] mb-2">
+                PDF Document <span className="text-violet-600 dark:text-[#a78bfa]">*</span>
               </label>
 
               {!pdfFile ? (
@@ -190,32 +189,32 @@ export const UploadPage: React.FC = () => {
                       handlePdfChange(e.dataTransfer.files[0]);
                     }
                   }}
-                  className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/50 p-8 text-center hover:border-blue-500 hover:bg-blue-50/30 dark:border-slate-700 dark:bg-slate-900/40 dark:hover:border-blue-500/60 dark:hover:bg-slate-900/80 transition-all cursor-pointer group"
+                  className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-violet-500/30 bg-violet-50/30 dark:border-violet-400/20 dark:bg-white/[0.02] p-8 text-center hover:border-violet-500 hover:bg-violet-50/60 dark:hover:border-violet-400/50 dark:hover:bg-white/[0.05] transition-all duration-200 cursor-pointer group shadow-inner"
                 >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600/10 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
-                    <UploadCloud className="h-6 w-6" />
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl liquid-glass text-violet-600 dark:text-[#a78bfa] group-hover:scale-110 group-hover:bg-violet-600 group-hover:text-white transition-all duration-200 shadow-md">
+                    <UploadCloud className="h-7 w-7" />
                   </div>
-                  <p className="mt-3 text-sm font-semibold text-slate-800 dark:text-white">
+                  <p className="mt-4 text-sm font-bold text-slate-900 dark:text-[#f8fafc]">
                     Click to browse or drag and drop your PDF
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">PDF up to 100 MB</p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-[#94a3b8] font-mono-code">PDF files up to 100 MB</p>
                 </div>
               ) : (
-                <div className="flex items-center justify-between rounded-xl border border-blue-500/30 bg-blue-50/50 dark:bg-blue-950/20 p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600/20 text-blue-600 dark:text-blue-400">
-                      <FileText className="h-5 w-5" />
+                <div className="flex items-center justify-between rounded-2xl liquid-glass p-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-600/20 text-violet-700 dark:text-[#c4b5fd]">
+                      <FileText className="h-6 w-6" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-1">{pdfFile.name}</p>
-                      <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      <p className="text-sm font-bold text-slate-900 dark:text-[#f8fafc] line-clamp-1">{pdfFile.name}</p>
+                      <div className="flex items-center gap-3 text-xs font-mono-code text-slate-500 dark:text-[#94a3b8] mt-0.5">
                         <span>{formatBytes(pdfFile.size)}</span>
                         {analyzingPdf ? (
-                          <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
+                          <span className="flex items-center gap-1 text-violet-600 dark:text-[#a78bfa]">
                             <Loader2 className="h-3 w-3 animate-spin" /> Counting pages...
                           </span>
                         ) : totalPages ? (
-                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">{totalPages} pages detected</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{totalPages} pages detected</span>
                         ) : null}
                       </div>
                     </div>
@@ -228,7 +227,7 @@ export const UploadPage: React.FC = () => {
                       setTotalPages(undefined);
                       if (pdfInputRef.current) pdfInputRef.current.value = '';
                     }}
-                    className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 dark:hover:text-white transition-colors"
+                    className="rounded-xl p-2 text-slate-400 hover:bg-white/40 dark:hover:bg-white/10 dark:hover:text-white transition-colors"
                     title="Remove file"
                   >
                     <X className="h-4 w-4" />
@@ -246,14 +245,14 @@ export const UploadPage: React.FC = () => {
                 }}
               />
               {fieldErrors.pdf && (
-                <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{fieldErrors.pdf[0]}</p>
+                <p className="mt-1.5 text-xs text-red-500 dark:text-red-400 font-mono-code">{fieldErrors.pdf[0]}</p>
               )}
             </div>
 
             {/* Title */}
             <div>
-              <label htmlFor="title" className="block text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">
-                Book Title <span className="text-blue-600 dark:text-blue-500">*</span>
+              <label htmlFor="title" className="block text-xs font-bold uppercase tracking-wider font-mono-code text-slate-700 dark:text-[#f8fafc] mb-2">
+                Book Title <span className="text-violet-600 dark:text-[#a78bfa]">*</span>
               </label>
               <input
                 id="title"
@@ -261,87 +260,87 @@ export const UploadPage: React.FC = () => {
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g., The Ultimate Guide to Modern Design"
-                className="w-full rounded-xl border border-slate-300 bg-white dark:border-slate-800 dark:bg-slate-900/90 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-sm"
+                placeholder="e.g., Introduction to Statistics and Probability"
+                className="liquid-input w-full px-4 py-3 text-sm font-medium placeholder-slate-400 dark:placeholder-slate-500"
               />
               {fieldErrors.title && (
-                <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{fieldErrors.title[0]}</p>
+                <p className="mt-1.5 text-xs text-red-500 dark:text-red-400 font-mono-code">{fieldErrors.title[0]}</p>
               )}
             </div>
 
             {/* Author */}
             <div>
-              <label htmlFor="author" className="block text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">
-                Author Name <span className="text-slate-500 text-xs font-normal">(Optional)</span>
+              <label htmlFor="author" className="block text-xs font-bold uppercase tracking-wider font-mono-code text-slate-700 dark:text-[#f8fafc] mb-2">
+                Author Name <span className="text-slate-400 dark:text-[#94a3b8] text-[11px] font-normal lowercase">(optional)</span>
               </label>
               <input
                 id="author"
                 type="text"
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
-                placeholder="e.g., Jane Doe"
-                className="w-full rounded-xl border border-slate-300 bg-white dark:border-slate-800 dark:bg-slate-900/90 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-sm"
+                placeholder="e.g., Hafizul Irfan"
+                className="liquid-input w-full px-4 py-3 text-sm font-medium placeholder-slate-400 dark:placeholder-slate-500"
               />
               {fieldErrors.author && (
-                <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{fieldErrors.author[0]}</p>
+                <p className="mt-1.5 text-xs text-red-500 dark:text-red-400 font-mono-code">{fieldErrors.author[0]}</p>
               )}
             </div>
 
             {/* Description */}
             <div>
-              <label htmlFor="description" className="block text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">
-                Description <span className="text-slate-500 text-xs font-normal">(Optional)</span>
+              <label htmlFor="description" className="block text-xs font-bold uppercase tracking-wider font-mono-code text-slate-700 dark:text-[#f8fafc] mb-2">
+                Description <span className="text-slate-400 dark:text-[#94a3b8] text-[11px] font-normal lowercase">(optional)</span>
               </label>
               <textarea
                 id="description"
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="A brief overview or synopsis of the book..."
-                className="w-full rounded-xl border border-slate-300 bg-white dark:border-slate-800 dark:bg-slate-900/90 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none shadow-sm"
+                placeholder="A brief overview or synopsis of the book content..."
+                className="liquid-input w-full px-4 py-3 text-sm font-medium placeholder-slate-400 dark:placeholder-slate-500 resize-none"
               />
               {fieldErrors.description && (
-                <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{fieldErrors.description[0]}</p>
+                <p className="mt-1.5 text-xs text-red-500 dark:text-red-400 font-mono-code">{fieldErrors.description[0]}</p>
               )}
             </div>
 
-            {/* Cover Image Upload (Optional) */}
+            {/* Cover Image Upload */}
             <div>
-              <label className="block text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">
+              <label className="block text-xs font-bold uppercase tracking-wider font-mono-code text-slate-700 dark:text-[#f8fafc] mb-2">
                 Custom Cover Image{' '}
-                <span className="text-slate-500 text-xs font-normal">
-                  (Optional — defaults to PDF first page)
+                <span className="text-slate-400 dark:text-[#94a3b8] text-[11px] font-normal lowercase">
+                  (optional — auto-extracts page 1 by default)
                 </span>
               </label>
 
               {!coverPreview ? (
                 <div
                   onClick={() => coverInputRef.current?.click()}
-                  className="flex items-center gap-4 rounded-xl border border-dashed border-slate-300 bg-slate-50/50 p-4 hover:border-slate-400 hover:bg-slate-100/60 dark:border-slate-800 dark:bg-slate-900/30 dark:hover:border-slate-700 dark:hover:bg-slate-900/60 transition-all cursor-pointer shadow-sm"
+                  className="flex items-center gap-4 rounded-2xl border border-dashed border-slate-300 dark:border-white/10 bg-white/40 dark:bg-white/[0.02] p-4 hover:border-violet-500 hover:bg-violet-50/20 dark:hover:border-violet-400/40 dark:hover:bg-white/[0.05] transition-all cursor-pointer shadow-sm"
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl liquid-glass text-violet-600 dark:text-[#a78bfa]">
                     <ImageIcon className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">Upload custom cover</p>
-                    <p className="text-[11px] text-slate-500">JPG, PNG, or WebP up to 10 MB</p>
+                    <p className="text-xs font-bold text-slate-800 dark:text-[#f8fafc]">Upload custom cover</p>
+                    <p className="text-[11px] font-mono-code text-slate-500 dark:text-[#94a3b8]">JPG, PNG, or WebP up to 10 MB</p>
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900 p-3">
+                <div className="flex items-center gap-4 rounded-2xl liquid-glass p-3">
                   <img
                     src={coverPreview}
                     alt="Cover preview"
-                    className="h-16 w-12 rounded object-cover border border-slate-300 dark:border-slate-700 shadow-sm"
+                    className="h-16 w-12 rounded-xl object-cover border border-slate-300/60 dark:border-white/10 shadow-sm"
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-slate-900 dark:text-white truncate">{coverFile?.name}</p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{formatBytes(coverFile?.size)}</p>
+                    <p className="text-xs font-bold text-slate-900 dark:text-[#f8fafc] truncate">{coverFile?.name}</p>
+                    <p className="text-[11px] font-mono-code text-slate-500 dark:text-[#94a3b8]">{formatBytes(coverFile?.size)}</p>
                   </div>
                   <button
                     type="button"
                     onClick={removeCover}
-                    className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
+                    className="rounded-xl p-2 text-slate-400 hover:bg-white/40 dark:hover:bg-white/10 dark:hover:text-white"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -358,23 +357,23 @@ export const UploadPage: React.FC = () => {
                 }}
               />
               {fieldErrors.cover && (
-                <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{fieldErrors.cover[0]}</p>
+                <p className="mt-1.5 text-xs text-red-500 dark:text-red-400 font-mono-code">{fieldErrors.cover[0]}</p>
               )}
             </div>
 
             {/* Upload Progress Bar */}
             {isUploading && (
-              <div className="space-y-2 rounded-xl bg-slate-100 dark:bg-slate-950/80 p-4 border border-blue-500/20">
-                <div className="flex items-center justify-between text-xs font-semibold">
-                  <span className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+              <div className="space-y-2 rounded-2xl liquid-glass p-4 border border-violet-500/30">
+                <div className="flex items-center justify-between text-xs font-mono-code font-bold">
+                  <span className="flex items-center gap-2 text-violet-700 dark:text-[#c4b5fd]">
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    Uploading and processing e-book...
+                    Publishing e-book to storage...
                   </span>
                   <span className="text-slate-900 dark:text-white">{uploadProgress}%</span>
                 </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200/60 dark:bg-black/40">
                   <div
-                    className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-200"
+                    className="h-full bg-gradient-to-r from-violet-600 via-indigo-500 to-purple-600 transition-all duration-200"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
@@ -385,12 +384,12 @@ export const UploadPage: React.FC = () => {
             <button
               type="submit"
               disabled={isUploading || !pdfFile || !title.trim()}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3 px-6 text-sm font-bold text-white shadow-lg shadow-blue-600/20 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 disabled:pointer-events-none transition-all active:scale-[0.99]"
+              className="liquid-btn-primary flex w-full items-center justify-center gap-2 py-4 px-6 text-sm font-extrabold disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
             >
               {isUploading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Uploading E-Book...
+                  Publishing E-Book...
                 </>
               ) : (
                 <>
