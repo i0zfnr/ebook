@@ -127,28 +127,97 @@ export const ReaderPage: React.FC = () => {
 
   // 2. Persist reading progress on page flip
   useEffect(() => {
-    if (!ebook || totalPages === 0) return;
-    saveReadingProgress(
-      ebook.slug || ebook.id,
-      currentPage,
-      totalPages,
-      ebook.title,
-      ebook.cover_url,
-      ebook.slug
-    );
+    if (ebook && currentPage > 0 && totalPages > 0) {
+      saveReadingProgress(
+        ebook.slug || ebook.id,
+        currentPage,
+        totalPages,
+        ebook.title,
+        ebook.cover_url,
+        ebook.slug
+      );
+    }
   }, [currentPage, totalPages, ebook]);
 
-  // 3. Handle Bookmark toggling
-  const handleToggleBookmark = (pageNum: number = currentPage) => {
-    if (!ebook) return;
-    const updated = toggleBookmark(ebook.slug || ebook.id, pageNum);
-    setBookmarks(updated);
+  // 3. Sync fullscreen state changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  // 4. Keyboard Shortcuts: Arrow keys, F, Esc, B, +, -
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        document.activeElement?.tagName === 'INPUT' ||
+        document.activeElement?.tagName === 'TEXTAREA' ||
+        activeModalElement !== null
+      ) {
+        return;
+      }
+
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        handleNextPage();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        handlePrevPage();
+      } else if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        handleToggleFullscreen();
+      } else if (e.key === 'b' || e.key === 'B') {
+        e.preventDefault();
+        handleToggleBookmark();
+      } else if (e.key === '+' || e.key === '=') {
+        e.preventDefault();
+        handleZoomIn();
+      } else if (e.key === '-') {
+        e.preventDefault();
+        handleZoomOut();
+      } else if (e.key === 'Escape') {
+        setShowThumbnails(false);
+        setShowToc(false);
+        setShowSearch(false);
+        setShowAiHub(false);
+        setActiveModalElement(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [currentPage, totalPages, isFullscreen, zoom, activeModalElement, spreadMode]);
+
+  // Navigation handlers
+  const handlePrevPage = () => {
+    const step = spreadMode === 'single' ? 1 : 2;
+    setCurrentPage((prev) => Math.max(1, prev - step));
   };
 
-  const isCurrentBookmarked = bookmarks.some((b) => b.pageNumber === currentPage);
+  const handleNextPage = () => {
+    const step = spreadMode === 'single' ? 1 : 2;
+    setCurrentPage((prev) => Math.min(totalPages, prev + step));
+  };
 
-  // 4. Fullscreen toggle
-  const toggleFullscreen = () => {
+  const handleZoomIn = () => {
+    setZoom((prev) => Math.min(2.5, parseFloat((prev + 0.15).toFixed(2))));
+  };
+
+  const handleZoomOut = () => {
+    setZoom((prev) => Math.max(0.5, parseFloat((prev - 0.15).toFixed(2))));
+  };
+
+  const handleZoomReset = () => {
+    setZoom(1);
+  };
+
+  const handleToggleFullscreen = () => {
     if (!readerContainerRef.current) return;
     if (!document.fullscreenElement) {
       readerContainerRef.current.requestFullscreen().catch(() => {});
@@ -157,25 +226,10 @@ export const ReaderPage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
-
-  // 5. Zoom controls (0.5x to 3.5x)
-  const handleZoomIn = () => {
-    setZoom((prev) => Math.min(parseFloat((prev + 0.25).toFixed(2)), 3.5));
-  };
-
-  const handleZoomOut = () => {
-    setZoom((prev) => Math.max(parseFloat((prev - 0.25).toFixed(2)), 0.5));
-  };
-
-  const handleResetZoom = () => {
-    setZoom(1);
+  const handleToggleBookmark = () => {
+    if (!ebook) return;
+    const updated = toggleBookmark(ebook.slug || ebook.id, currentPage);
+    setBookmarks(updated);
   };
 
   const handleToggleSpreadMode = () => {
@@ -186,51 +240,43 @@ export const ReaderPage: React.FC = () => {
     });
   };
 
-  // Ctrl + Wheel Zoom
-  useEffect(() => {
-    const handleWheel = (e: WheelEvent) => {
-      if (e.ctrlKey) {
-        e.preventDefault();
-        if (e.deltaY < 0) {
-          handleZoomIn();
-        } else {
-          handleZoomOut();
-        }
-      }
-    };
-    window.addEventListener('wheel', handleWheel, { passive: false });
-    return () => window.removeEventListener('wheel', handleWheel);
-  }, []);
+  const isCurrentBookmarked = bookmarks.some((b) => b.pageNumber === currentPage);
 
+  // Loading Screen
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 text-slate-100 p-6">
-        <div className="liquid-glass flex flex-col items-center gap-4 rounded-3xl p-8 sm:p-10 shadow-2xl">
-          <Loader2 className="h-10 w-10 animate-spin text-violet-600 dark:text-[#a78bfa]" />
-          <div className="text-center">
-            <h3 className="text-base font-extrabold text-slate-900 dark:text-[#f8fafc]">Opening Flipbook</h3>
-            <p className="mt-1 text-xs font-mono-code text-slate-500 dark:text-[#94a3b8]">{loadingProgressText}</p>
-          </div>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-900 text-white space-y-4">
+        <div className="relative flex h-16 w-16 items-center justify-center">
+          <Loader2 className="h-12 w-12 animate-spin text-violet-500" />
+          <div className="absolute h-8 w-8 rounded-full bg-violet-600/30 blur-md" />
         </div>
+        <p className="text-sm font-mono-code tracking-wide text-slate-400 animate-pulse">
+          {loadingProgressText}
+        </p>
       </div>
     );
   }
 
+  // Error Screen
   if (error || !ebook) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 text-slate-100 p-6 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/10 text-red-400 mb-4 border border-red-500/20">
-          <AlertCircle className="h-7 w-7" />
+      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-4 text-center">
+        <div className="glass-card max-w-md p-8 border-rose-500/30 space-y-4">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-400">
+            <AlertCircle className="h-7 w-7" />
+          </div>
+          <h2 className="text-xl font-bold text-white">Cannot Open E-Book</h2>
+          <p className="text-xs text-slate-400">{error || 'Unknown reader error'}</p>
+          <div className="pt-2">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-violet-500 transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back to Library</span>
+            </Link>
+          </div>
         </div>
-        <h2 className="text-xl font-bold">Failed to Load Reader</h2>
-        <p className="mt-1 text-sm text-slate-400 max-w-md">{error}</p>
-        <Link
-          to="/library"
-          className="liquid-btn-primary mt-6 flex items-center gap-2 px-5 py-2.5 text-xs font-bold"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Library
-        </Link>
       </div>
     );
   }
@@ -238,53 +284,53 @@ export const ReaderPage: React.FC = () => {
   return (
     <div
       ref={readerContainerRef}
-      className="relative flex h-screen w-screen flex-col overflow-hidden bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 select-none transition-colors duration-200"
+      className="relative flex h-screen w-screen flex-col overflow-hidden bg-slate-950 select-none"
     >
-      {/* Top Reader Toolbar with AI Learning Hub toggle */}
+      {/* Top Floating Glass Toolbar */}
       <ReaderToolbar
         title={ebook.title}
         currentPage={currentPage}
         totalPages={totalPages}
-        onPrevPage={() => setCurrentPage((p) => Math.max(1, p - 1))}
-        onNextPage={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-        onPageChange={(page) => setCurrentPage(page)}
         zoom={zoom}
+        isFullscreen={isFullscreen}
+        isBookmarked={isCurrentBookmarked}
+        aiCount={interactiveElements.length}
+        showAiHub={showAiHub}
+        showThumbnails={showThumbnails}
+        showToc={showToc}
+        showSearch={showSearch}
+        onPrevPage={handlePrevPage}
+        onNextPage={handleNextPage}
+        onPageChange={(page: number) => setCurrentPage(page)}
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
-        onResetZoom={handleResetZoom}
-        onToggleFullscreen={toggleFullscreen}
-        isFullscreen={isFullscreen}
+        onResetZoom={handleZoomReset}
+        onToggleFullscreen={handleToggleFullscreen}
+        onToggleBookmark={handleToggleBookmark}
         onToggleThumbnails={() => {
           setShowThumbnails(!showThumbnails);
           setShowToc(false);
           setShowSearch(false);
           setShowAiHub(false);
         }}
-        showThumbnails={showThumbnails}
         onToggleToc={() => {
           setShowToc(!showToc);
           setShowThumbnails(false);
           setShowSearch(false);
           setShowAiHub(false);
         }}
-        showToc={showToc}
         onToggleSearch={() => {
           setShowSearch(!showSearch);
           setShowThumbnails(false);
           setShowToc(false);
           setShowAiHub(false);
         }}
-        showSearch={showSearch}
         onToggleAiHub={() => {
           setShowAiHub(!showAiHub);
           setShowThumbnails(false);
           setShowToc(false);
           setShowSearch(false);
         }}
-        showAiHub={showAiHub}
-        aiCount={interactiveElements.length}
-        isBookmarked={isCurrentBookmarked}
-        onToggleBookmark={() => handleToggleBookmark(currentPage)}
         spreadMode={spreadMode}
         onToggleSpreadMode={handleToggleSpreadMode}
         bookIdOrSlug={ebook.slug || ebook.id}
@@ -378,7 +424,7 @@ export const ReaderPage: React.FC = () => {
           }}
         />
 
-        {/* Interactive Overlay Modal (Quiz, Video, Flashcards & Match Game, QR) */}
+        {/* Interactive Overlay Modal (Quiz, Video, Flashcards & Match Game) */}
         <InteractiveOverlayModal
           isOpen={!!activeModalElement}
           onClose={() => setActiveModalElement(null)}
