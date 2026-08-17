@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import type * as pdfjsLib from 'pdfjs-dist';
-import { ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Loader2, Gamepad2 } from 'lucide-react';
 import type { Ebook } from '../types/ebook';
+import type { InteractiveElement } from '../types/interactive';
 import { ebookService } from '../services/ebookService';
 import {
   loadPdfDocument,
@@ -14,11 +15,18 @@ import {
   toggleBookmark,
   type BookmarkItem,
 } from '../services/pdfService';
+import {
+  generateAIInteractiveElements,
+  getSavedInteractiveElements,
+} from '../services/aiGeneratorService';
 import { ReaderToolbar } from '../components/reader/ReaderToolbar';
 import { FlipBook } from '../components/reader/FlipBook';
 import { ThumbnailSidebar } from '../components/reader/ThumbnailSidebar';
 import { TableOfContentsDrawer } from '../components/reader/TableOfContentsDrawer';
 import { SearchDrawer } from '../components/reader/SearchDrawer';
+import { AiLearningHubDrawer } from '../components/reader/AiLearningHubDrawer';
+import { InteractivePageHotspots } from '../components/reader/InteractivePageHotspots';
+import { InteractiveOverlayModal } from '../components/interactive/InteractiveOverlayModal';
 
 export const ReaderPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,6 +39,8 @@ export const ReaderPage: React.FC = () => {
 
   const [outline, setOutline] = useState<PdfOutlineItem[]>([]);
   const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
+  const [interactiveElements, setInteractiveElements] = useState<InteractiveElement[]>([]);
+  const [activeModalElement, setActiveModalElement] = useState<InteractiveElement | null>(null);
 
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingProgressText, setLoadingProgressText] = useState<string>('Fetching e-book details...');
@@ -41,9 +51,10 @@ export const ReaderPage: React.FC = () => {
   const [showThumbnails, setShowThumbnails] = useState<boolean>(false);
   const [showToc, setShowToc] = useState<boolean>(false);
   const [showSearch, setShowSearch] = useState<boolean>(false);
+  const [showAiHub, setShowAiHub] = useState<boolean>(false);
   const [spreadMode, setSpreadMode] = useState<'auto' | 'single' | 'double'>('auto');
 
-  // 1. Fetch Ebook details, load PDF, resume saved page, & extract outline
+  // 1. Fetch Ebook details, load PDF, resume saved page, extract outline & load AI interactive elements
   useEffect(() => {
     if (!id) return;
     let isCancelled = false;
@@ -74,6 +85,20 @@ export const ReaderPage: React.FC = () => {
 
           // Load bookmarks
           setBookmarks(getBookmarks(book.slug || book.id));
+
+          // Load or AI-generate interactive quizzes/videos/games
+          const existingInteractive = getSavedInteractiveElements(book.slug || book.id);
+          if (existingInteractive.length > 0) {
+            setInteractiveElements(existingInteractive);
+          } else if (book.interactive_elements && book.interactive_elements.length > 0) {
+            setInteractiveElements(book.interactive_elements);
+          } else {
+            generateAIInteractiveElements(doc, book.title, book.slug || book.id, book.interactive_elements)
+              .then((generated) => {
+                if (!isCancelled) setInteractiveElements(generated);
+              })
+              .catch(() => {});
+          }
 
           // Extract outline chapters asynchronously
           extractPdfOutline(doc).then((extractedOutline) => {
@@ -215,14 +240,14 @@ export const ReaderPage: React.FC = () => {
       ref={readerContainerRef}
       className="relative flex h-screen w-screen flex-col overflow-hidden bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100 select-none transition-colors duration-200"
     >
-      {/* Top Reader Toolbar with TOC & Search controls */}
+      {/* Top Reader Toolbar with AI Learning Hub toggle */}
       <ReaderToolbar
         title={ebook.title}
         currentPage={currentPage}
         totalPages={totalPages}
         onPrevPage={() => setCurrentPage((p) => Math.max(1, p - 1))}
         onNextPage={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-        onPageChange={(p) => setCurrentPage(p)}
+        onPageChange={(page) => setCurrentPage(page)}
         zoom={zoom}
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
@@ -233,20 +258,31 @@ export const ReaderPage: React.FC = () => {
           setShowThumbnails(!showThumbnails);
           setShowToc(false);
           setShowSearch(false);
+          setShowAiHub(false);
         }}
         showThumbnails={showThumbnails}
         onToggleToc={() => {
           setShowToc(!showToc);
           setShowThumbnails(false);
           setShowSearch(false);
+          setShowAiHub(false);
         }}
         showToc={showToc}
         onToggleSearch={() => {
           setShowSearch(!showSearch);
           setShowThumbnails(false);
           setShowToc(false);
+          setShowAiHub(false);
         }}
         showSearch={showSearch}
+        onToggleAiHub={() => {
+          setShowAiHub(!showAiHub);
+          setShowThumbnails(false);
+          setShowToc(false);
+          setShowSearch(false);
+        }}
+        showAiHub={showAiHub}
+        aiCount={interactiveElements.length}
         isBookmarked={isCurrentBookmarked}
         onToggleBookmark={() => handleToggleBookmark(currentPage)}
         spreadMode={spreadMode}
@@ -267,6 +303,31 @@ export const ReaderPage: React.FC = () => {
           />
         )}
 
+        {/* Floating AI Interactive Page Hotspots (contextual to current flipped page) */}
+        <InteractivePageHotspots
+          currentPage={currentPage}
+          interactiveElements={interactiveElements}
+          onOpenElement={(el) => setActiveModalElement(el)}
+        />
+
+        {/* Persistent Floating AI Learning Hub Launcher (Always visible on any page) */}
+        {interactiveElements.length > 0 && !showAiHub && (
+          <button
+            type="button"
+            onClick={() => setShowAiHub(true)}
+            className="fixed bottom-6 right-6 z-30 flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white font-extrabold text-xs shadow-2xl shadow-violet-600/40 hover:scale-105 active:scale-95 border border-violet-400/40 cursor-pointer animate-in slide-in-from-bottom-4 group transition-all"
+            title="Open AI Questions & Games Hub"
+          >
+            <div className="flex h-6 w-6 items-center justify-center rounded-xl bg-white/20 group-hover:rotate-12 transition-transform">
+              <Gamepad2 className="h-3.5 w-3.5" />
+            </div>
+            <span>AI Questions & Games</span>
+            <span className="rounded-full bg-white text-violet-900 text-[10px] px-1.5 py-0.2 font-mono-code font-bold">
+              {interactiveElements.length}
+            </span>
+          </button>
+        )}
+
         {/* Thumbnail Sidebar Drawer */}
         <ThumbnailSidebar
           pdfDoc={pdfDoc}
@@ -280,7 +341,7 @@ export const ReaderPage: React.FC = () => {
           }}
         />
 
-        {/* Table of Contents & Bookmarks Drawer */}
+        {/* Table of Contents & AI Activities Drawer */}
         <TableOfContentsDrawer
           isOpen={showToc}
           onClose={() => setShowToc(false)}
@@ -292,6 +353,18 @@ export const ReaderPage: React.FC = () => {
           }}
           bookmarks={bookmarks}
           onToggleBookmark={handleToggleBookmark}
+          interactiveElements={interactiveElements}
+          onOpenInteractiveElement={(el) => setActiveModalElement(el)}
+        />
+
+        {/* AI Learning Hub All-in-One Drawer */}
+        <AiLearningHubDrawer
+          isOpen={showAiHub}
+          onClose={() => setShowAiHub(false)}
+          interactiveElements={interactiveElements}
+          onOpenElement={(el) => setActiveModalElement(el)}
+          onSelectPage={(pageNum) => setCurrentPage(pageNum)}
+          title={ebook.title}
         />
 
         {/* Full-Text Search Drawer */}
@@ -303,6 +376,14 @@ export const ReaderPage: React.FC = () => {
             setCurrentPage(pageNum);
             setShowSearch(false);
           }}
+        />
+
+        {/* Interactive Overlay Modal (Quiz, Video, Flashcards & Match Game, QR) */}
+        <InteractiveOverlayModal
+          isOpen={!!activeModalElement}
+          onClose={() => setActiveModalElement(null)}
+          element={activeModalElement}
+          bookId={ebook.slug || ebook.id}
         />
       </div>
     </div>

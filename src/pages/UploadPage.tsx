@@ -9,9 +9,17 @@ import {
   Loader2,
   X,
   Sparkles,
+  HelpCircle,
+  Gamepad2,
+  Play,
+  QrCode,
+  RotateCcw,
+  Check,
 } from 'lucide-react';
 import { ebookService, formatBytes } from '../services/ebookService';
 import { loadPdfDocument } from '../services/pdfService';
+import { generateAiLive, saveInteractiveElements } from '../services/aiGeneratorService';
+import type { InteractiveElement } from '../types/interactive';
 
 export const UploadPage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,14 +35,55 @@ export const UploadPage: React.FC = () => {
 
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [analyzingPdf, setAnalyzingPdf] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+
+  // AI Generation Pipeline States
+  const [isAiProcessing, setIsAiProcessing] = useState<boolean>(false);
+  const [aiStepText, setAiStepText] = useState<string>('');
+  const [aiProgressPercent, setAiProgressPercent] = useState<number>(0);
+  const [generatedElements, setGeneratedElements] = useState<InteractiveElement[]>([]);
+  const [aiComplete, setAiComplete] = useState<boolean>(false);
 
   const pdfInputRef = useRef<HTMLInputElement | null>(null);
   const coverInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Handle PDF Selection & Auto-detect metadata
+  // Trigger AI Pipeline for a loaded PDF
+  const runAiPipeline = async (file: File, bookTitle: string) => {
+    setIsAiProcessing(true);
+    setAiComplete(false);
+    setAiProgressPercent(10);
+    setAiStepText('Opening document & scanning vector structure...');
+
+    try {
+      const fileUrl = URL.createObjectURL(file);
+      const pdf = await loadPdfDocument(fileUrl);
+      setTotalPages(pdf.numPages);
+      setAiProgressPercent(30);
+
+      const elements = await generateAiLive(
+        pdf,
+        bookTitle || file.name.replace(/\.pdf$/i, ''),
+        (step, pct) => {
+          setAiStepText(step);
+          setAiProgressPercent(pct);
+        }
+      );
+
+      setGeneratedElements(elements);
+      setAiComplete(true);
+      setAiStepText('Interactive Learning Suite Ready!');
+      URL.revokeObjectURL(fileUrl);
+    } catch (err) {
+      console.warn('AI pipeline error:', err);
+      setAiStepText('AI Heuristic ready');
+      setAiComplete(true);
+    } finally {
+      setIsAiProcessing(false);
+    }
+  };
+
+  // Handle PDF Selection & Auto-detect metadata + trigger AI pipeline
   const handlePdfChange = async (file: File) => {
     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
       setErrorMessage('Please select a valid PDF file.');
@@ -50,23 +99,14 @@ export const UploadPage: React.FC = () => {
     setPdfFile(file);
 
     // Auto-fill title from filename if title is empty
+    let detectedTitle = title;
     if (!title.trim()) {
-      const cleanName = file.name.replace(/\.pdf$/i, '').replace(/[-_]/g, ' ');
-      setTitle(cleanName);
+      detectedTitle = file.name.replace(/\.pdf$/i, '').replace(/[-_]/g, ' ');
+      setTitle(detectedTitle);
     }
 
-    // Inspect PDF page count
-    try {
-      setAnalyzingPdf(true);
-      const fileUrl = URL.createObjectURL(file);
-      const pdf = await loadPdfDocument(fileUrl);
-      setTotalPages(pdf.numPages);
-      URL.revokeObjectURL(fileUrl);
-    } catch {
-      // PDF page counting failure can be ignored safely
-    } finally {
-      setAnalyzingPdf(false);
-    }
+    // Run active AI Generation pipeline immediately on file attach!
+    runAiPipeline(file, detectedTitle);
   };
 
   // Handle Cover image selection
@@ -126,9 +166,20 @@ export const UploadPage: React.FC = () => {
       if (totalPages) formData.append('total_pages', String(totalPages));
       formData.append('status', 'published');
 
+      // Attach generated AI Interactive Suite to database payload
+      if (generatedElements.length > 0) {
+        formData.append('interactive_elements', JSON.stringify(generatedElements));
+      }
+
       const result = await ebookService.uploadEbook(formData, (progress) => {
         setUploadProgress(progress);
       });
+
+      // Save to client localStorage cache for instant fast loading
+      if (generatedElements.length > 0) {
+        saveInteractiveElements(result.slug || result.id, generatedElements);
+        saveInteractiveElements(result.id, generatedElements);
+      }
 
       navigate(`/book/${result.slug || result.id}`);
     } catch (err: any) {
@@ -156,7 +207,7 @@ export const UploadPage: React.FC = () => {
             Upload Your E-Book
           </h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-[#94a3b8]">
-            Publish your PDF into an interactive, digital flipbook readable on any device.
+            Attach your course PDF and watch AI build the interactive learning suite automatically.
           </p>
         </div>
 
@@ -200,7 +251,7 @@ export const UploadPage: React.FC = () => {
                   <p className="mt-1 text-xs text-slate-500 dark:text-[#94a3b8] font-mono-code">PDF files up to 100 MB</p>
                 </div>
               ) : (
-                <div className="flex items-center justify-between rounded-2xl liquid-glass p-4">
+                <div className="flex items-center justify-between rounded-2xl liquid-glass p-4 border border-violet-500/30">
                   <div className="flex items-center gap-3.5">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-600/20 text-violet-700 dark:text-[#c4b5fd]">
                       <FileText className="h-6 w-6" />
@@ -209,13 +260,11 @@ export const UploadPage: React.FC = () => {
                       <p className="text-sm font-bold text-slate-900 dark:text-[#f8fafc] line-clamp-1">{pdfFile.name}</p>
                       <div className="flex items-center gap-3 text-xs font-mono-code text-slate-500 dark:text-[#94a3b8] mt-0.5">
                         <span>{formatBytes(pdfFile.size)}</span>
-                        {analyzingPdf ? (
-                          <span className="flex items-center gap-1 text-violet-600 dark:text-[#a78bfa]">
-                            <Loader2 className="h-3 w-3 animate-spin" /> Counting pages...
+                        {totalPages && (
+                          <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                            {totalPages} pages detected
                           </span>
-                        ) : totalPages ? (
-                          <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{totalPages} pages detected</span>
-                        ) : null}
+                        )}
                       </div>
                     </div>
                   </div>
@@ -225,9 +274,11 @@ export const UploadPage: React.FC = () => {
                     onClick={() => {
                       setPdfFile(null);
                       setTotalPages(undefined);
+                      setGeneratedElements([]);
+                      setAiComplete(false);
                       if (pdfInputRef.current) pdfInputRef.current.value = '';
                     }}
-                    className="rounded-xl p-2 text-slate-400 hover:bg-white/40 dark:hover:bg-white/10 dark:hover:text-white transition-colors"
+                    className="rounded-xl p-2 text-slate-400 hover:bg-white/40 dark:hover:bg-white/10 dark:hover:text-white transition-colors cursor-pointer"
                     title="Remove file"
                   >
                     <X className="h-4 w-4" />
@@ -248,6 +299,120 @@ export const UploadPage: React.FC = () => {
                 <p className="mt-1.5 text-xs text-red-500 dark:text-red-400 font-mono-code">{fieldErrors.pdf[0]}</p>
               )}
             </div>
+
+            {/* AI Real-time Interactive Learning Suite Generation Box */}
+            {pdfFile && (
+              <div className="rounded-2xl liquid-glass p-5 border border-violet-500/40 bg-gradient-to-b from-violet-500/10 to-indigo-500/5 space-y-4 shadow-lg animate-in fade-in duration-300">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-600 text-white shadow-md shadow-violet-600/30">
+                      <Sparkles className={`h-4 w-4 ${isAiProcessing ? 'animate-spin' : ''}`} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-extrabold text-slate-900 dark:text-[#f8fafc] flex items-center gap-2">
+                        <span>AI Interactive Learning Suite Engine</span>
+                        {aiComplete && (
+                          <span className="liquid-pill text-[9px] py-0.2 px-2 font-mono-code text-emerald-500 font-bold flex items-center gap-1">
+                            <Check className="h-3 w-3" /> Ready
+                          </span>
+                        )}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-[#94a3b8]">
+                        {aiStepText || 'Analyzing document context...'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {pdfFile && !isAiProcessing && (
+                    <button
+                      type="button"
+                      onClick={() => runAiPipeline(pdfFile, title)}
+                      className="liquid-btn-secondary px-2.5 py-1 text-[11px] font-mono-code font-bold flex items-center gap-1 cursor-pointer"
+                      title="Re-run AI Generation"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      <span>Re-analyze</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Progress Bar during AI Generation */}
+                {isAiProcessing && (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px] font-mono-code text-violet-700 dark:text-[#c4b5fd]">
+                      <span className="flex items-center gap-1.5">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        {aiStepText}
+                      </span>
+                      <span className="font-bold">{aiProgressPercent}%</span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200/60 dark:bg-black/40">
+                      <div
+                        className="h-full bg-gradient-to-r from-violet-600 via-indigo-500 to-purple-600 transition-all duration-300"
+                        style={{ width: `${aiProgressPercent}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Real-time Generated Activities Preview */}
+                {generatedElements.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-slate-200/50 dark:border-white/10">
+                    <div className="flex items-center justify-between text-[11px] font-mono-code font-bold text-slate-600 dark:text-[#94a3b8]">
+                      <span>Generated Interactive Elements ({generatedElements.length})</span>
+                      <span className="text-emerald-500">Auto-embedded to pages</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {generatedElements.map((el) => {
+                        const isQuiz = el.type === 'quiz';
+                        const isFlash = el.type === 'flashcards';
+                        const isVid = el.type === 'video';
+                        const isQr = el.type === 'qr_link';
+
+                        return (
+                          <div
+                            key={el.id}
+                            className="flex items-center gap-2.5 p-2.5 rounded-xl liquid-glass border border-slate-200/60 dark:border-white/10 text-left"
+                          >
+                            <div
+                              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white text-xs ${
+                                isQuiz
+                                  ? 'bg-violet-600 shadow-sm shadow-violet-600/30'
+                                  : isFlash
+                                  ? 'bg-amber-500 shadow-sm shadow-amber-500/30'
+                                  : isVid
+                                  ? 'bg-rose-600 shadow-sm shadow-rose-600/30'
+                                  : 'bg-emerald-600 shadow-sm shadow-emerald-600/30'
+                              }`}
+                            >
+                              {isQuiz && <HelpCircle className="h-4 w-4" />}
+                              {isFlash && <Gamepad2 className="h-4 w-4" />}
+                              {isVid && <Play className="h-4 w-4 fill-white" />}
+                              {isQr && <QrCode className="h-4 w-4" />}
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[9px] uppercase font-mono-code font-bold text-violet-600 dark:text-[#a78bfa]">
+                                  {isFlash ? 'Recall Match Game' : el.type}
+                                </span>
+                                <span className="text-[9px] font-mono-code text-slate-400">
+                                  Page {el.pageNumber}
+                                </span>
+                              </div>
+                              <p className="text-xs font-bold text-slate-900 dark:text-[#f8fafc] truncate">
+                                {el.title}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Title */}
             <div>
@@ -278,7 +443,7 @@ export const UploadPage: React.FC = () => {
                 type="text"
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
-                placeholder="e.g., Hafizul Irfan"
+                placeholder="e.g., Politeknik Besut"
                 className="liquid-input w-full px-4 py-3 text-sm font-medium placeholder-slate-400 dark:placeholder-slate-500"
               />
               {fieldErrors.author && (
@@ -296,7 +461,7 @@ export const UploadPage: React.FC = () => {
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="A brief overview or synopsis of the book content..."
+                placeholder="A brief overview or synopsis of the course module..."
                 className="liquid-input w-full px-4 py-3 text-sm font-medium placeholder-slate-400 dark:placeholder-slate-500 resize-none"
               />
               {fieldErrors.description && (
@@ -340,7 +505,7 @@ export const UploadPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={removeCover}
-                    className="rounded-xl p-2 text-slate-400 hover:bg-white/40 dark:hover:bg-white/10 dark:hover:text-white"
+                    className="rounded-xl p-2 text-slate-400 hover:bg-white/40 dark:hover:bg-white/10 dark:hover:text-white cursor-pointer"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -367,7 +532,7 @@ export const UploadPage: React.FC = () => {
                 <div className="flex items-center justify-between text-xs font-mono-code font-bold">
                   <span className="flex items-center gap-2 text-violet-700 dark:text-[#c4b5fd]">
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    Publishing e-book to storage...
+                    Publishing e-book & saving interactive suite to cloud...
                   </span>
                   <span className="text-slate-900 dark:text-white">{uploadProgress}%</span>
                 </div>
@@ -384,12 +549,12 @@ export const UploadPage: React.FC = () => {
             <button
               type="submit"
               disabled={isUploading || !pdfFile || !title.trim()}
-              className="liquid-btn-primary flex w-full items-center justify-center gap-2 py-4 px-6 text-sm font-extrabold disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+              className="liquid-btn-primary flex w-full items-center justify-center gap-2 py-4 px-6 text-sm font-extrabold disabled:opacity-50 disabled:pointer-events-none cursor-pointer shadow-xl"
             >
               {isUploading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Publishing E-Book...
+                  Publishing E-Book & Interactive Suite...
                 </>
               ) : (
                 <>

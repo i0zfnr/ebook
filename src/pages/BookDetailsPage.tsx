@@ -11,9 +11,16 @@ import {
   Loader2,
   ExternalLink,
   Sparkles,
+  HelpCircle,
+  Gamepad2,
+  Play,
+  QrCode,
+  ArrowRight,
 } from 'lucide-react';
 import type { Ebook } from '../types/ebook';
+import type { InteractiveElement } from '../types/interactive';
 import { ebookService, formatBytes, formatDate } from '../services/ebookService';
+import { getSavedInteractiveElements } from '../services/aiGeneratorService';
 import { BookCover } from '../components/books/BookCover';
 
 export const BookDetailsPage: React.FC = () => {
@@ -21,6 +28,7 @@ export const BookDetailsPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [ebook, setEbook] = useState<Ebook | null>(null);
+  const [interactiveItems, setInteractiveItems] = useState<InteractiveElement[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,6 +44,13 @@ export const BookDetailsPage: React.FC = () => {
       .getEbook(id)
       .then((data) => {
         setEbook(data);
+        // Check saved interactive items
+        const local = getSavedInteractiveElements(data.slug || data.id);
+        if (local.length > 0) {
+          setInteractiveItems(local);
+        } else if (data.interactive_elements && data.interactive_elements.length > 0) {
+          setInteractiveItems(data.interactive_elements);
+        }
       })
       .catch((err: any) => {
         setError(err.response?.data?.message || 'E-Book not found');
@@ -90,9 +105,9 @@ export const BookDetailsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen text-slate-900 dark:text-[#f8fafc] py-12 transition-colors duration-300">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 space-y-8">
         {/* Navigation Breadcrumb */}
-        <div className="mb-8">
+        <div>
           <Link
             to="/library"
             className="inline-flex items-center gap-2 text-xs font-mono-code font-bold text-slate-500 hover:text-violet-600 dark:text-[#94a3b8] dark:hover:text-[#a78bfa] transition-colors"
@@ -195,7 +210,7 @@ export const BookDetailsPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(true)}
-                className="flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold text-red-600 hover:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 dark:hover:text-red-300 transition-colors"
+                className="flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold text-red-600 hover:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 dark:hover:text-red-300 transition-colors cursor-pointer"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 <span>Delete E-Book</span>
@@ -203,6 +218,88 @@ export const BookDetailsPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* AI Interactive Learning Suite Activities Card */}
+        {interactiveItems.length > 0 && (
+          <div className="liquid-glass rounded-3xl p-6 sm:p-8 shadow-2xl border border-violet-500/30 space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-600/30">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-[#f8fafc]">
+                    AI Interactive Learning Suite
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-[#94a3b8]">
+                    {interactiveItems.length} Gamified Learning Activities attached to this textbook
+                  </p>
+                </div>
+              </div>
+
+              <Link
+                to={`/read/${ebook.slug || ebook.id}`}
+                className="liquid-btn-primary px-4 py-2 text-xs font-extrabold flex items-center gap-1.5 shadow-md"
+              >
+                <span>Launch All</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {interactiveItems.map((el) => {
+                const isQuiz = el.type === 'quiz';
+                const isFlash = el.type === 'flashcards';
+                const isVid = el.type === 'video';
+
+                return (
+                  <Link
+                    key={el.id}
+                    to={`/read/${ebook.slug || ebook.id}`}
+                    className="flex flex-col justify-between p-4 rounded-2xl liquid-glass border border-slate-200/60 dark:border-white/10 hover:border-violet-500 hover:scale-[1.02] transition-all group shadow-sm"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div
+                          className={`flex h-9 w-9 items-center justify-center rounded-xl text-white ${
+                            isQuiz
+                              ? 'bg-violet-600 shadow-md shadow-violet-600/30'
+                              : isFlash
+                              ? 'bg-amber-500 shadow-md shadow-amber-500/30'
+                              : isVid
+                              ? 'bg-rose-600 shadow-md shadow-rose-600/30'
+                              : 'bg-emerald-600 shadow-md shadow-emerald-600/30'
+                          }`}
+                        >
+                          {isQuiz && <HelpCircle className="h-4 w-4" />}
+                          {isFlash && <Gamepad2 className="h-4 w-4" />}
+                          {isVid && <Play className="h-4 w-4 fill-white" />}
+                          {el.type === 'qr_link' && <QrCode className="h-4 w-4" />}
+                        </div>
+
+                        <span className="liquid-pill text-[10px] py-0.2 px-2 font-mono-code font-bold">
+                          Page {el.pageNumber}
+                        </span>
+                      </div>
+
+                      <span className="text-[10px] uppercase font-mono-code font-bold text-violet-600 dark:text-[#a78bfa]">
+                        {isFlash ? 'Speed Match Game' : el.type}
+                      </span>
+                      <h4 className="text-xs font-extrabold text-slate-900 dark:text-[#f8fafc] mt-0.5 line-clamp-2">
+                        {el.title}
+                      </h4>
+                    </div>
+
+                    <div className="pt-3 mt-3 border-t border-slate-200/40 dark:border-white/5 flex items-center justify-between text-[11px] font-bold text-violet-600 dark:text-[#a78bfa] group-hover:translate-x-1 transition-transform">
+                      <span>Play in Flipbook</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Delete Confirmation Modal with Liquid Glass */}
@@ -223,7 +320,7 @@ export const BookDetailsPage: React.FC = () => {
                 type="button"
                 disabled={deleting}
                 onClick={() => setShowDeleteModal(false)}
-                className="liquid-btn-secondary px-4 py-2 font-semibold"
+                className="liquid-btn-secondary px-4 py-2 font-semibold cursor-pointer"
               >
                 Cancel
               </button>
@@ -231,7 +328,7 @@ export const BookDetailsPage: React.FC = () => {
                 type="button"
                 disabled={deleting}
                 onClick={handleDelete}
-                className="flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 font-bold text-white hover:bg-red-500 disabled:opacity-50 transition-colors shadow-lg shadow-red-600/30"
+                className="flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 font-bold text-white hover:bg-red-500 disabled:opacity-50 transition-colors shadow-lg shadow-red-600/30 cursor-pointer"
               >
                 {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                 Confirm Delete

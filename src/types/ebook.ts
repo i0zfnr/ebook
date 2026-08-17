@@ -12,6 +12,7 @@ export interface Ebook {
   status: 'published' | 'draft' | 'archived' | string;
   pdf_url: string;
   cover_url: string | null;
+  interactive_elements?: any[];
   created_at: string;
   updated_at: string;
 }

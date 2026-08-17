@@ -33,7 +33,7 @@ export const Navbar: React.FC = () => {
                 Flip<span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-500 dark:from-[#a78bfa] dark:to-[#c4b5fd]">Book</span>
               </span>
               <span className="liquid-pill text-[10px] px-2 py-0.5">
-                PRO
+                AI PRO
               </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-[#94a3b8] font-medium hidden sm:block">
@@ -65,8 +65,9 @@ export const Navbar: React.FC = () => {
         </nav>
 
         {/* Action Button & Theme Toggle */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-2.5">
           <ThemeToggle />
+          
           <Link
             to="/upload"
             className="liquid-btn-primary flex items-center gap-2 px-4 py-2 text-xs font-extrabold"

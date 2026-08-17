@@ -16,6 +16,7 @@ import {
   Search,
   Bookmark,
   BookmarkCheck,
+  Sparkles,
 } from 'lucide-react';
 import { ThemeToggle } from '../common/ThemeToggle';
 import { BrandLogo } from '../common/BrandLogo';
@@ -44,6 +45,9 @@ interface ReaderToolbarProps {
   spreadMode?: 'auto' | 'single' | 'double';
   onToggleSpreadMode?: () => void;
   bookIdOrSlug?: string | number;
+  onToggleAiHub?: () => void;
+  showAiHub?: boolean;
+  aiCount?: number;
 }
 
 export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
@@ -70,6 +74,9 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
   spreadMode = 'auto',
   onToggleSpreadMode,
   bookIdOrSlug,
+  onToggleAiHub,
+  showAiHub = false,
+  aiCount = 0,
 }) => {
   const [inputPage, setInputPage] = useState<string>(String(currentPage));
 
@@ -147,8 +154,29 @@ export const ReaderToolbar: React.FC<ReaderToolbarProps> = ({
         </button>
       </div>
 
-      {/* Right: Tools & Drawers */}
+      {/* Right: Tools & AI Learning Suite */}
       <div className="flex items-center gap-1.5">
+        {/* Prominent AI Learning Suite Button */}
+        {onToggleAiHub && (
+          <button
+            onClick={onToggleAiHub}
+            className={`flex h-8 items-center gap-1.5 px-3 rounded-xl transition-all cursor-pointer border ${
+              showAiHub
+                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold shadow-lg shadow-violet-600/40 border-violet-400/50'
+                : 'liquid-glass bg-violet-500/10 text-violet-700 dark:text-[#c4b5fd] border-violet-500/30 hover:bg-violet-600 hover:text-white shadow-sm'
+            }`}
+            title="Open AI Interactive Suite (Quizzes, Games, Videos)"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-amber-400 animate-pulse" />
+            <span className="text-xs font-bold font-mono-code hidden sm:inline">AI Suite</span>
+            {aiCount > 0 && (
+              <span className="rounded-full bg-violet-600 text-white dark:bg-white dark:text-violet-900 text-[10px] px-1.5 py-0.2 font-mono-code font-bold">
+                {aiCount}
+              </span>
+            )}
+          </button>
+        )}
+
         {/* Table of Contents & Bookmarks Drawer Toggle */}
         {onToggleToc && (
           <button
